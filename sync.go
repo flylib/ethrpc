@@ -6,7 +6,7 @@ import (
 )
 
 // Syncing - object with syncing data info
-// 区块同步结构体
+// 区块同步信息结构体
 type Syncing struct {
 	IsSyncing     bool //同步状态 false  表示同步完成
 	StartingBlock int  //开始同步区块
