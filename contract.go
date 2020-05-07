@@ -1,8 +1,8 @@
 package ethrpc
 
 import (
+	"errors"
 	"fmt"
-	"github.com/miaolz123/conver"
 	"log"
 	"math"
 	"math/big"
@@ -131,29 +131,29 @@ func USDTCollect() {
 }
 
 //发送手续费
-func sendGas(address string, gas float64) (string, error) {
-	GAS := int64(gas * 1e18)
-	v := T{
-		From:  GASADDRES,
-		To:    address,
-		Value: big.NewInt(GAS),
-	}
-	fmt.Println("手续费转账：", v.Value)
-
-	l, err := UnLock(GASADDRES, "HJBJK5810929")
-
-	if err != nil || l == false {
-		log.Println("解锁失败，错误提示：", err.Error())
-		return "", err
-	}
-
-	hash, err := client.EthSendTransaction(v)
-	if err != nil {
-		log.Println("ERR:", err.Error())
-	}
-
-	return hash, err
-}
+//func sendGas(address string, gas float64) (string, error) {
+//	GAS := int64(gas * 1e18)
+//	v := T{
+//		From:  GASADDRES,
+//		To:    address,
+//		Value: big.NewInt(GAS),
+//	}
+//	fmt.Println("手续费转账：", v.Value)
+//
+//	l, err := UnLock(GASADDRES, "HJBJK5810929")
+//
+//	if err != nil || l == false {
+//		log.Println("解锁失败，错误提示：", err.Error())
+//		return "", err
+//	}
+//
+//	hash, err := client.EthSendTransaction(v)
+//	if err != nil {
+//		log.Println("ERR:", err.Error())
+//	}
+//
+//	return hash, err
+//}
 
 //Token 转帐
 func Traction(toaddress string, value float64) (string, error) {
@@ -234,35 +234,35 @@ func ListAccount() []string {
 }
 
 //获取ETH余额
-func GetBalance(address string) float64 {
-
-	blance, _ := client.EthGetBalance(address, "latest")
-
-	//wei TO  ETH
-	ethc, _ := ParseBigInt(blance.String())
-	intwei, _ := strconv.ParseInt(ethc.String(), 0, 64)
-	inteth := float64(intwei) / 1e18
-
-	return inteth
-	//fmt.Println("会员钱包数量：",len(acounts))
-	//for i:=0;i<len(acounts);i++  {
-	//
-	//	//client.EthPerUnLockAccount(acounts[i],"123456")
-	//
-	//	blance,_:=client.EthGetBalance(acounts[i],"latest")
-	//
-	//	//wei TO  ETH
-	//	ethc,_ :=eth.ParseBigInt(blance.String())
-	//	intwei,_:=eth.ParseInt(ethc.String())
-	//
-	//	inteth:=float64(intwei)/100000000000000000
-	//
-	//	if inteth>0 {
-	//		fmt.Println("地址：",acounts[i],"   余额：",inteth,"ETH")
-	//	}
-	//
-	//}
-}
+//func GetBalance(address string) float64 {
+//
+//	blance, _ := client.EthGetBalance(address, "latest")
+//
+//	//wei TO  ETH
+//	ethc, _ := ParseBigInt(blance.String())
+//	intwei, _ := strconv.ParseInt(ethc.String(), 0, 64)
+//	inteth := float64(intwei) / 1e18
+//
+//	return inteth
+//	//fmt.Println("会员钱包数量：",len(acounts))
+//	//for i:=0;i<len(acounts);i++  {
+//	//
+//	//	//client.EthPerUnLockAccount(acounts[i],"123456")
+//	//
+//	//	blance,_:=client.EthGetBalance(acounts[i],"latest")
+//	//
+//	//	//wei TO  ETH
+//	//	ethc,_ :=eth.ParseBigInt(blance.String())
+//	//	intwei,_:=eth.ParseInt(ethc.String())
+//	//
+//	//	inteth:=float64(intwei)/100000000000000000
+//	//
+//	//	if inteth>0 {
+//	//		fmt.Println("地址：",acounts[i],"   余额：",inteth,"ETH")
+//	//	}
+//	//
+//	//}
+//}
 
 //获取USDT余额
 func getUSDTBalance(address string) float64 {
@@ -368,15 +368,15 @@ func TokeBalance(address string, token string) float64 {
 	}*/
 }
 
-//获取GasPrice
-func GasPrice() (big.Int, error) {
-	return client.EthGasPrice()
-}
-
-//客户端的coinbase地址
-func CoinsBase() (string, error) {
-	return client.EthCoinbase()
-}
+////获取GasPrice
+//func GasPrice() (big.Int, error) {
+//	return client.EthGasPrice()
+//}
+//
+////客户端的coinbase地址
+//func CoinsBase() (string, error) {
+//	return client.EthCoinbase()
+//}
 
 //合约地址转帐
 func TokenTraction(fromAddress, toAddress, token string, decimal int64, value float64) (string, error) {
@@ -431,104 +431,87 @@ func TokenTraction(fromAddress, toAddress, token string, decimal int64, value fl
 }
 
 //获取合約余额
-func GetContractBalance(address string, token string, decimals int) float64 {
+//func GetContractBalance(address string, token string, decimals int) float64 {
+//
+//	addrSplit := strings.Split(address, "0x")[1] //地址去掉0x
+//	//data数据格式：最前边的“0x70a08231000000000000000000000000”是固定的，后边的是钱包地址（不带“0x”前缀）
+//	data := "0x70a08231000000000000000000000000" + addrSplit //data拼接
+//
+//	t := T{
+//		From: address, //查詢地址
+//		To:   token,   //合约地址
+//		Data: data,    //data
+//	}
+//
+//	//获取代币的余额，要通过rpc接口得到接口为：eth_call
+//	balance, err := client.EthCall(t, "latest")
+//	if err != nil {
+//		log.Println("错误信息:", err.Error())
+//	}
+//	//fmt.Println("余额：", balance)
+//	//單位計算
+//	ethc, _ := ParseBigInt(balance) //
+//	intwei, _ := strconv.ParseFloat(ethc.String(), decimals)
+//	inteth := intwei / math.Pow10(decimals)
+//
+//	return inteth
+//
+//}
 
-	addrSplit := strings.Split(address, "0x")[1] //地址去掉0x
-	//data数据格式：最前边的“0x70a08231000000000000000000000000”是固定的，后边的是钱包地址（不带“0x”前缀）
-	data := "0x70a08231000000000000000000000000" + addrSplit //data拼接
+const (
+	ContractInfoCode_Name         = "0x06fdde03" //获取合约名称
+	ContractInfoCode_Abbreviation = "0x95d89b41" //合约简称
+	ContractInfoCode_Balance      = "0x70a08231" //查询余额
+	ContractInfoCode_Accuracy     = "0x313ce567" //合约精度
+	ContractInfoCode_Total        = "0x18160ddd" //发行总量
 
-	t := T{
-		From: address, //查詢地址
-		To:   token,   //合约地址
-		Data: data,    //data
-	}
-
-	//获取代币的余额，要通过rpc接口得到接口为：eth_call
-	balance, err := client.EthCall(t, "latest")
-	if err != nil {
-		log.Println("错误信息:", err.Error())
-	}
-	//fmt.Println("余额：", balance)
-	//單位計算
-	ethc, _ := ParseBigInt(balance) //
-	intwei, _ := strconv.ParseFloat(ethc.String(), decimals)
-	inteth := intwei / math.Pow10(decimals)
-
-	return inteth
-
-}
+)
 
 //获取合約信息
-func GetContractInfo(address string, token string, code string) string {
-	if address == "" {
-		log.Println("地址不合法")
-		return ""
-	}
-	addrSplit := strings.Split(address, "0x")[1] //地址去掉0x
+func ContractInfo(from string, token string, code string) (interface{}, error) {
+	//地址去掉0x
+	addr := strings.TrimPrefix(from, "0x")
 	//data数据格式：最前边的“0x70a08231000000000000000000000000”是固定的，后边的是钱包地址（不带“0x”前缀）
-	//data := "0x70a08231000000000000000000000000" + addrSplit //data拼接
-	data := code + "000000000000000000000000" + addrSplit
+	data := code + "000000000000000000000000" + addr
 	t := T{
-		From: address, //查詢地址
-		To:   token,   //合约地址
-		Data: data,    //data
+		From: from,  //查詢地址
+		To:   token, //合约地址
+		Data: data,  //data
 	}
-
-	var dataStr string
+	result, err := client.EthCall(t, "latest")
+	if err != nil {
+		return "", err
+	}
+	//單位計算
+	resultBigInt, err := ParseBigInt(result)
+	if err != nil {
+		return "", err
+	}
 	switch code {
-	case "0x06fdde03": //获取合约名称
-		name, _ := client.EthCall(t, "latest")
-		//單位計算
-		ethc, _ := ParseBigInt(name) //
+	case ContractInfoCode_Name, ContractInfoCode_Abbreviation: //获取合约名称
+		n, _ := resultBigInt.GobEncode()
 		//intwei, _ := strconv.ParseFloat(ethc.String(), 18)
-		n, _ := ethc.GobEncode()
-		//fmt.Printf("合约名称:%s\n",n)
-		dataStr = fmt.Sprintf("%s", n)
-
-	case "0x95d89b41": //合约简称
-		symbol, _ := client.EthCall(t, "latest")
-		//單位計算
-		ethc, _ := ParseBigInt(symbol) //
-		//intwei, _ := strconv.ParseFloat(ethc.String(), 18)
-		s, _ := ethc.GobEncode()
-		//fmt.Printf("合约简称:%s\n", s)
-		dataStr = fmt.Sprintf("%s", s)
-
-	case "0x70a08231": //查询余额
-		//获取代币的余额，要通过rpc接口得到接口为：eth_call
-		balance, _ := client.EthCall(t, "latest")
-		//單位計算
-		ethc, _ := ParseBigInt(balance)                    //
-		intwei, _ := strconv.ParseFloat(ethc.String(), 18) //18
-
-		dataStr, _ = conver.String(intwei) //string(inteth)
-
-	case "0x313ce567": //合约精度
-		decimals, err := client.EthCall(t, "latest")
+		n, err := resultBigInt.GobEncode()
 		if err != nil {
-			log.Println("错误信息:", err.Error())
+			return "", err
 		}
-		bigs, _ := ParseBigInt(decimals)
-
-		pdecimals, _ := strconv.ParseFloat(bigs.String(), 64)
-
-		dataStr, _ = conver.String(pdecimals)
-		//fmt.Println("位數:", pdecimals)
-
-	case "0x18160ddd": //发行总量
-		totalSupply, err := client.EthCall(t, "latest")
+		return string(n), nil
+	case ContractInfoCode_Balance: //查询余额 	//
+		intwei, err := strconv.ParseFloat(resultBigInt.String(), 18) //18
 		if err != nil {
-			log.Println("错误信息: TotalSupply", err.Error())
+			return "", err
 		}
-		//單位計算
-		ethc, _ := ParseBigInt(totalSupply) //
-		intwei, _ := strconv.ParseFloat(ethc.String(), 18)
+		return intwei, nil
+	case ContractInfoCode_Accuracy: //合约精度
+		pdecimals, err := strconv.Atoi(resultBigInt.String())
+		if err != nil {
+			return "", err
+		}
+		return pdecimals, nil
+	case ContractInfoCode_Total: //发行总量
+		intwei, _ := strconv.ParseFloat(resultBigInt.String(), 18)
 		inteth := intwei / math.Pow10(18)
-		//itotal,_:=ParseInt(totalSupply)
-		ptotalSupply, _ := strconv.ParseFloat(totalSupply, 18)
-		fmt.Println("发行总量:", ptotalSupply)
-		dataStr, _ = conver.String(inteth) //string(inteth)
+		return inteth, nil
 	}
-
-	return dataStr
+	return nil, errors.New("not found contract code")
 }
