@@ -16,13 +16,7 @@ const PWD = "luce!1989@9922sdf" //密钥
 //const TADDR  = "0x031CdC6C680Dd7889605f1d9EAE15D22797d0b3E" //归集地址二
 const TADDR = "0x59f8b414805E0Bb0246A0b0CaF72a889cfb92a16"     //归集地址三
 const GASADDRES = "0x7260c1661793170694344bc813be6857ed16e58c" //手续费地址
-
-const Fromadd = "0x7f5CeDBb4CAC1e31dE6Aa8F02b6Bf882a04Fca35" //转账地址
-
-//var client = NewEthRPC("http://192.168.3.120:8545") //14354
-//var client = NewEthRPC("http://192.168.168.120:8545")
-//http://192.168.0.220:8545   192.168.0.220
-var client = NewEthRPC("http://192.168.0.144:8545")
+const Fromadd = "0x7f5CeDBb4CAC1e31dE6Aa8F02b6Bf882a04Fca35"   //转账地址
 
 //收款地址：0x59f8b414805E0Bb0246A0b0CaF72a889cfb92a16
 //USDTCollect()//归集
@@ -43,18 +37,6 @@ var client = NewEthRPC("http://192.168.0.144:8545")
 //	}
 //
 //}
-
-//this.Data["version"] = version  //钱包版本
-//解锁账户
-func UnLock(address string, password string) (bool, error) {
-
-	addr := strings.ToLower(address)
-	l, err := client.EthPerUnLockAccount(addr, password)
-	if err != nil {
-		log.Println("ERR:", err.Error())
-	}
-	return l, err
-}
 
 //USDT 归集
 func USDTCollect() {
@@ -156,7 +138,7 @@ func USDTCollect() {
 //}
 
 //Token 转帐
-func Traction(toaddress string, value float64) (string, error) {
+func (rpc *EthRPC) Traction(toaddress string, value float64) (string, error) {
 
 	taddr := strings.Split(toaddress, "0x")[1]
 
@@ -179,7 +161,7 @@ func Traction(toaddress string, value float64) (string, error) {
 	}
 	//hash,err:= client.EthPerSendTransaction(t,PWD)
 
-	hash, err := client.EthSendTransaction(t)
+	hash, err := rpc.EthSendTransaction(t)
 
 	if err != nil {
 		log.Println("错误信息:", err.Error())
@@ -200,19 +182,19 @@ func addPreZero(num string) string {
 }
 
 //创建钱包地址
-func newAccount(nu string) {
+func (rpc *EthRPC) newAccount(nu string) {
 
 	for i := 0; i <= 1000; i++ {
-		account, _ := client.EthPerNewAccount("luce!1989@9922sdf")
+		account, _ := rpc.EthPerNewAccount("luce!1989@9922sdf")
 		fmt.Println(nu, " 数量：", i, "-", account)
 		time.Sleep(300)
 	}
 }
 
 //列出本地钱包
-func ListAccount() []string {
+func (rpc *EthRPC) ListAccount() []string {
 
-	list, err := client.EthPerListAccounts()
+	list, err := rpc.EthPerListAccounts()
 	if err != nil {
 		log.Println("列出地址失败：", err.Error())
 	}
@@ -265,7 +247,7 @@ func ListAccount() []string {
 //}
 
 //获取USDT余额
-func getUSDTBalance(address string) float64 {
+func (rpc *EthRPC) getUSDTBalance(address string) float64 {
 
 	//0x7260c1661793170694344bC813BE6857ED16e58c
 	addr2 := strings.Split(address, "0x")[1]
@@ -277,7 +259,7 @@ func getUSDTBalance(address string) float64 {
 		Data: data,
 	}
 
-	balance, err := client.EthCall(t, "latest")
+	balance, err := rpc.EthCall(t, "latest")
 	if err != nil {
 		log.Println("错误信息:", err.Error())
 	}
@@ -317,7 +299,7 @@ func getUSDTBalance(address string) float64 {
 }
 
 //获取合约余额
-func TokeBalance(address string, token string) float64 {
+func (rpc *EthRPC) TokeBalance(address string, token string) float64 {
 
 	//0x7260c1661793170694344bC813BE6857ED16e58c
 	addr2 := strings.Split(address, "0x")[1]
@@ -329,7 +311,7 @@ func TokeBalance(address string, token string) float64 {
 		Data: data,
 	}
 
-	balance, err := client.EthCall(t, "latest")
+	balance, err := rpc.EthCall(t, "latest")
 	if err != nil {
 		log.Println("错误信息:", err.Error())
 	}
@@ -379,7 +361,7 @@ func TokeBalance(address string, token string) float64 {
 //}
 
 //合约地址转帐
-func TokenTraction(fromAddress, toAddress, token string, decimal int64, value float64) (string, error) {
+func (rpc *EthRPC) TokenTraction(fromAddress, toAddress, token string, decimal int64, value float64) (string, error) {
 
 	//收款地址截取去掉0x
 	toaddr := strings.Split(toAddress, "0x")[1]
@@ -420,7 +402,7 @@ func TokenTraction(fromAddress, toAddress, token string, decimal int64, value fl
 	}
 	//hash,err:= client.EthPerSendTransaction(t,PWD)
 	//log.Println("GasPrice",gaspric)
-	hash, err := client.EthSendTransaction(t)
+	hash, err := rpc.EthSendTransaction(t)
 
 	if err != nil {
 		log.Println("转账错误:", err.Error())
@@ -468,7 +450,7 @@ const (
 )
 
 //获取合約信息
-func ContractInfo(from string, token string, code string) (interface{}, error) {
+func (rpc *EthRPC) ContractInfo(from string, token string, code string) (interface{}, error) {
 	//地址去掉0x
 	addr := strings.TrimPrefix(from, "0x")
 	//data数据格式：最前边的“0x70a08231000000000000000000000000”是固定的，后边的是钱包地址（不带“0x”前缀）
@@ -478,7 +460,7 @@ func ContractInfo(from string, token string, code string) (interface{}, error) {
 		To:   token, //合约地址
 		Data: data,  //data
 	}
-	result, err := client.EthCall(t, "latest")
+	result, err := rpc.EthCall(t, "latest")
 	if err != nil {
 		return "", err
 	}
