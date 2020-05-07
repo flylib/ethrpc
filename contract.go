@@ -150,7 +150,7 @@ func (rpc *EthRPC) Traction(toaddress string, value float64) (string, error) {
 	//fmt.Println("value :",vstr ," len:",len(vstr))
 	//data拼接： “0x”+"23b872dd"+"from地址去掉0x并由0补够64位数"+"to地址去掉0x并由0补够64位数"+"十六进制的value值去掉0x并由0补够64位数"
 	//data:="0x70a08231"+faddr+taddr+vstr //data拼接
-	data := "0xa9059cbb" + addPreZero(taddr) + addPreZero(vs) //data拼接 addPreZero(faddr)
+	data := "0xa9059cbb" + AddPrefixZero(taddr) + AddPrefixZero(vs) //data拼接 addPreZero(faddr)
 
 	fmt.Println("Data拼装：", data)
 	t := T{
@@ -172,13 +172,28 @@ func (rpc *EthRPC) Traction(toaddress string, value float64) (string, error) {
 }
 
 // 补齐64位，不够前面用0补齐
-func addPreZero(num string) string {
-	t := len(num)
+func AddPrefixZero(str string) string {
+	count := len(str)
 	s := ""
-	for i := 0; i < 64-t; i++ {
+	for i := 0; i < 64-count; i++ {
 		s += "0"
 	}
-	return s + num
+	return s + str
+}
+
+//去除前缀0
+func TrimPrefixZero(str string) string {
+	count := len(str)
+	prefix := ""
+	for i := 0; i < count; i++ {
+		//字符"0"==48
+		if str[i] == 48 {
+			prefix += "0"
+			continue
+		}
+		break
+	}
+	return strings.TrimPrefix(str, prefix)
 }
 
 //创建钱包地址
@@ -389,7 +404,7 @@ func (rpc *EthRPC) TokenTraction(fromAddress, toAddress, token string, decimal i
 	//data:="0x70a08231"+faddr+taddr+vstr //data拼接 "0xa9059cbb"
 	//0xa9059cbb
 
-	data := TTtransferCode + addPreZero(toaddr) + addPreZero(has) //data拼接
+	data := TTtransferCode + AddPrefixZero(toaddr) + AddPrefixZero(has) //data拼接
 	//gaspric,_:= GasPrice()
 	//fmt.Println("Data拼装：", data)
 	t := T{
