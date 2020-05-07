@@ -6,21 +6,46 @@ import (
 	"unsafe"
 )
 
+//合约交易码
+
+const (
+	TTtransferCode     = "0xa9059cbb" //转账签名编码
+	TTbalanceOfCode    = "0x70a08231" //余额查询编码
+	TTDecimalsCode     = "0x313ce567" //位數
+	TTallowanceCode    = "0xdd62ed3e" //合约拥有者
+	TTsymbolCode       = "0x95d89b41" //合约简称
+	TTtotalSupplyCode  = "0x18160ddd" //发行总量
+	TTnameCode         = "0x06fdde03" //合约名称
+	TTapproveCode      = "0x095ea7b3" //认证
+	TTtransferFromCode = "0x23b872dd" //交易
+)
+
 // Transaction - transaction object
+/*"hash":"0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b",
+"nonce":"0x",
+"blockHash": "0xbeab0aa2411b7ab17f30a99d3cb9c6ef2fc5426d6ad6fd9e2a26a6aed1d1055b",
+"blockNumber": "0x15df", // 5599
+"transactionIndex":  "0x1", // 1
+"from":"0x407d73d8a49eeb85d32cf465507dd71d507100c1",
+"to":"0x85h43d8a49eeb85d32cf465507dd71d507100c1",
+"value":"0x7f110", // 520464
+"gas": "0x7f110", // 520464
+"gasPrice":"0x09184e72a000",
+"input":"0x603880600c6000396000f300603880600c6000396000f3603880600c6000396000f360",*/
 //交易结构体
 type Transaction struct {
-	Hash             string
-	Nonce            int
-	BlockHash        string
-	BlockNumber      *int
-	TransactionIndex *int
-	From             string
-	To               string
-	Value            big.Int
-	Gas              int
-	GasPrice         big.Int
-	Data             string
-	Input            string
+	Hash             string  //DATA, 32字节 - 交易哈希
+	Nonce            int     //QUANTITY - 本次交易之前发送方已经生成的交易数量
+	BlockHash        string  // DATA, 32字节 - 交易所在块的哈希，对于挂起块，该值为null
+	BlockNumber      *int    // QUANTITY - 交易所在块的编号，对于挂起块，该值为null
+	TransactionIndex *int    //QUANTITY - 交易在块中的索引位置，挂起块该值为null
+	From             string  // DATA, 20字节 - 交易发送方地址
+	To               string  // DATA, 20字节 - 交易接收方地址，对于合约创建交易，该值为null
+	Value            big.Int // QUANTITY - 发送的以太数量，单位：wei
+	Gas              int     // QUANTITY - 发送方提供的gas可用量
+	GasPrice         big.Int //: QUANTITY - 发送方提供的gas价格，单位：wei
+	Data             string  //
+	Input            string  //DATA - 随交易发送的数据
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
@@ -34,8 +59,6 @@ func (t *Transaction) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-
-
 
 type proxyBlockWithTransactions struct {
 	Number           hexInt             `json:"number"`
@@ -144,6 +167,7 @@ type proxyTransactionReceipt struct {
 	Root              string `json:"root"`
 	Status            string `json:"status,omitempty"`
 }
+
 // UnmarshalJSON implements the json.Unmarshaler interface.
 func (t *TransactionReceipt) UnmarshalJSON(data []byte) error {
 	proxy := new(proxyTransactionReceipt)
@@ -155,4 +179,3 @@ func (t *TransactionReceipt) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-

@@ -25,7 +25,6 @@ const (
 	V2 = "2.0"
 )
 
-
 //http客户端接口
 type httpClient interface {
 	Post(url string, contentType string, body io.Reader) (*http.Response, error)
@@ -130,7 +129,6 @@ String - 当前客户端版本号
 */
 func (rpc *EthRPC) Web3ClientVersion() (string, error) {
 	var clientVersion string
-
 	err := rpc.call("web3_clientVersion", &clientVersion)
 	return clientVersion, err
 }
@@ -264,7 +262,6 @@ Boolean - 客户端主动的挖矿返回true，否则为false。
 */
 func (rpc *EthRPC) EthMining() (bool, error) {
 	var mining bool
-
 	err := rpc.call("eth_mining", &mining)
 	return mining, err
 }
@@ -314,7 +311,6 @@ Array of DATA, 20 Bytes - 该地址拥有的地址列表
 */
 func (rpc *EthRPC) EthAccounts() ([]string, error) {
 	accounts := []string{}
-
 	err := rpc.call("eth_accounts", &accounts)
 	return accounts, err
 }
@@ -347,7 +343,7 @@ func (rpc *EthRPC) EthBlockNumber() (int, error) {
    '0x407d73d8a49eeb85d32cf465507dd71d507100c1',
    'latest']
 	返回
-	QUANTITY - 当前余额的整数，以wei为单位。
+	QUANTITY - 当前余额的整数，以wei(Ether = 10e18Wei)为单位。
 */
 func (rpc *EthRPC) EthGetBalance(address, block string) (big.Int, error) {
 	var response string
@@ -539,7 +535,6 @@ func (rpc *EthRPC) EthSign(address, data string) (string, error) {
 /**
 	EthSendTransaction creates new message call transaction or a contract creation, if the data field contains code.
 	如果数据字段包含code，则创建新的消息调用交易或创建合约。
-
 	params
 	Object - 交易对象
 	from: DATA, 20 Bytes - 交易的发送地址。
@@ -650,28 +645,7 @@ func (rpc *EthRPC) EthEstimateGas(transaction T) (int, error) {
    			'0xe670ec64341771606e55d6b4ca35a1a6b75ee3d5145a99d05921026d1527331',
    			true
 		]
-
-	返回
-		Object - 块对象，或者当没有找到块时为null：
-		number: QUANTITY - 块号。 当处于pending时为null。
-		hash: DATA, 32 Bytes - 区块的hash. 当处于pending时为null。
-		parentHash: DATA, 32 Bytes - 父类块的hash。
-		nonce: DATA, 8 Bytes - 生成的工作证明的hash。当处于pending时为null。
-		sha3Uncles: DATA, 32 Bytes - 块中的uncle数据的SHA3。
-		logsBloom: DATA, 256 Bytes - 块的日志的bloom过滤器。当pending时为空。
-		transactionsRoot: DATA, 32 Bytes - 块的交易trie的根。
-		stateRoot: DATA, 32 Bytes - 该块的最终状态树的根。
-		receiptsRoot: DATA, 32 Bytes - 块接受的trie的根。
-		miner: DATA, 20 Bytes - 获得挖矿奖励的受益人的地址。
-		difficulty: QUANTITY - 该块的难度整数。
-		totalDifficulty: QUANTITY - 直到此块的链的总难度整数。
-		extraData: DATA - 该块的“额外数据”字段。
-		size: QUANTITY - 以字节为单位该块的大小。
-		gasLimit: QUANTITY - 此区块允许的最大gas数量。
-		gasUsed: QUANTITY - 在此区块中所有交易使用的总gas。
-		timestamp: QUANTITY - 整理块时的unix时间戳。
-		transactions: Array - 取决于最后给定的参数，事务对象数组或32字节交易散列。
-		uncles: Array - uncle散列数组。
+	参考：http://cw.hubwiz.com/card/c/ethereum-json-rpc-api/1/3/21/
 */
 func (rpc *EthRPC) EthGetBlockByHash(hash string, withTransactions bool) (*Block, error) {
 	return rpc.getBlock("eth_getBlockByHash", withTransactions, hash, withTransactions)
@@ -702,20 +676,7 @@ func (rpc *EthRPC) EthGetBlockByNumber(number int, withTransactions bool) (*Bloc
 		params: [
   			 "0xb903239f8543d04b5dc1ba6579132b143087c68db1b2168786408fcbce568238"
 		]
-
-	返回
-		Object - 交易对象，当交易没有找到为null。
-			hash: DATA, 32 Bytes - 交易的hash
-			nonce: QUANTITY - 发送人在此之前进行的交易次数。
-			blockHash: DATA, 32 Bytes - 该交易处于其中的区块的散列，当其处于pending状态时为空。
-			blockNumber: QUANTITY - 该交易处于其中的区块号，当其处于pending状态时为空。
-			transactionIndex: QUANTITY - 在区块中交易index位置，当其处于pending状态时为空。
-			from: DATA, 20 Bytes -发送者的地址。
-			to: DATA, 20 Bytes - 接收者地址，当它是合约创建交易时为null。
-			value: QUANTITY - value转移，以Wei为单位.
-			gasPrice: QUANTITY - 发送者提供的gas price，以Wei为单位。
-			gas: QUANTITY - 发送者提供的gas。
-			input: DATA - 数据随交易一起发送。
+	参考：http://cw.hubwiz.com/card/c/ethereum-json-rpc-api/1/3/23/
 */
 func (rpc *EthRPC) EthGetTransactionByHash(hash string) (*Transaction, error) {
 	return rpc.getTransaction("eth_getTransactionByHash", hash)
@@ -761,6 +722,7 @@ EthGetTransactionByBlockHashAndIndex returns information about a transaction by 
 	QUANTITY - 交易index位置（整型）
 返回
 	跟eth_getBlockByHash一样。
+参考：http://cw.hubwiz.com/card/c/ethereum-json-rpc-api/1/3/24/
 */
 func (rpc *EthRPC) EthGetTransactionByBlockHashAndIndex(blockHash string, transactionIndex int) (*Transaction, error) {
 	return rpc.getTransaction("eth_getTransactionByBlockHashAndIndex", blockHash, IntToHex(transactionIndex))
@@ -825,7 +787,6 @@ EthGetCompilers returns a list of available compilers in the client.
 	none
 返回
 Array - 可以编译的数组列表。
-
 */
 func (rpc *EthRPC) EthGetCompilers() ([]string, error) {
 	compilers := []string{}
