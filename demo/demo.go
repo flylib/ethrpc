@@ -6,7 +6,9 @@ import (
 )
 
 func main() {
-	rpc := ethrpc.NewEthRPC("http://192.168.0.107:8545")
+	fmt.Println(len("0000000000000000000000000000000000000000000000a2a15d09519be00000"))
+	return
+	rpc := ethrpc.NewEthRPC("http://192.168.0.100:8545")
 	version, _ := rpc.Web3ClientVersion()
 	fmt.Println(version)
 	count, _ := rpc.NetPeerCount()
@@ -17,7 +19,7 @@ func main() {
 	if err != nil {
 		fmt.Println("error get EthGetBlockByNumber = ", err)
 	}
-	t, err := rpc.EthGetTransactionByHash(block.Hash)
+	//t, err := rpc.EthGetTransactionByHash(block.Hash)
 	//fmt.Println("block=", block)
 	fmt.Println(fmt.Sprintf("transaction=%#v", block.Transactions))
 	ethblocknumber, _ := rpc.EthBlockNumber()
