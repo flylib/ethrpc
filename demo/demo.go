@@ -6,9 +6,7 @@ import (
 )
 
 func main() {
-	fmt.Println(len("0000000000000000000000000000000000000000000000a2a15d09519be00000"))
-	return
-	rpc := ethrpc.NewEthRPC("http://192.168.0.100:8545")
+	rpc := ethrpc.NewEthRPC("http://192.168.0.220:8545")
 	version, _ := rpc.Web3ClientVersion()
 	fmt.Println(version)
 	count, _ := rpc.NetPeerCount()
@@ -41,4 +39,16 @@ func main() {
 	fmt.Println("price=", price)
 	prvVersion, _ := rpc.EthProtocolVersion()
 	fmt.Println("prvVersion=", prvVersion)
+
+	blockHight, err := rpc.EthBlockNumber()
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	curBlock, err := rpc.EthGetBlockByNumber(blockHight, false)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(curBlock)
 }

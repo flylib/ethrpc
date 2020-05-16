@@ -18,6 +18,14 @@ const TADDR = "0x59f8b414805E0Bb0246A0b0CaF72a889cfb92a16"     //归集地址三
 const GASADDRES = "0x7260c1661793170694344bc813be6857ed16e58c" //手续费地址
 const Fromadd = "0x7f5CeDBb4CAC1e31dE6Aa8F02b6Bf882a04Fca35"   //转账地址
 
+const (
+	ContractInfoCode_Name         = "0x06fdde03" //获取合约名称
+	ContractInfoCode_Abbreviation = "0x95d89b41" //合约简称
+	ContractInfoCode_Balance      = "0x70a08231" //查询余额
+	ContractInfoCode_Accuracy     = "0x313ce567" //合约精度
+	ContractInfoCode_Total        = "0x18160ddd" //发行总量
+)
+
 //收款地址：0x59f8b414805E0Bb0246A0b0CaF72a889cfb92a16
 //USDTCollect()//归集
 //version, err := client.Web3ClientVersion()
@@ -309,7 +317,6 @@ func (rpc *EthRPC) getUSDTBalance(address string) float64 {
 		if inteth>0 {
 			fmt.Println("地址：",acounts[i],"   USDT余额：",inteth,"ETH")
 		}
-
 	}*/
 }
 
@@ -376,55 +383,25 @@ func (rpc *EthRPC) TokeBalance(address string, token string) float64 {
 //}
 
 //合约地址转帐
-func (rpc *EthRPC) TokenTraction(fromAddress, toAddress, token string, decimal int64, value float64) (string, error) {
-
+//return 交易hash
+func (rpc *EthRPC) ContractTraction(from, to, token string, decimal int64, value float64) (string, error) {
 	//收款地址截取去掉0x
-	toaddr := strings.Split(toAddress, "0x")[1]
-
-	//转账代币数量 十六进制的value值去掉0x并由0补够64位数
-	//v:=strconv.FormatFloat(value,0.00000,18,64)
-	//vl := IntToHex(int(value * 1e6)) //"000000000000000000000000"  USDT
-	//log.Println("十六进制：",IntToHex(int(value * 1e6)))
-	//IntToHex(int(value*1e18)) //"000000000000000000000000"
-
+	to = strings.TrimPrefix(to, "0x")
 	//这是处理位数的代码段
 	amount := big.NewFloat(float64(value))
 	tenDecimal := big.NewFloat(math.Pow(10, float64(decimal)))
 	convertAmount, _ := new(big.Float).Mul(tenDecimal, amount).Int(&big.Int{})
-
-	//log.Println("转账数量：", convertAmount)
-
-	has := fmt.Sprintf("%x", convertAmount) //格式化数据
-	//log.Println("Int十六进制：",has)
-
-	//vs := strings.Split(has, "0x")[1]
-	//log.Println("BIG十六进制：",vs)
-
-	//data拼接： “0x”+"23b872dd"+"from地址去掉0x并由0补够64位数"+"to地址去掉0x并由0补够64位数"+"十六进制的value值去掉0x并由0补够64位数"
-	//data:="0x70a08231"+faddr+taddr+vstr //data拼接 "0xa9059cbb"
-	//0xa9059cbb
-
-	data := TTtransferCode + AddPrefixZero(toaddr) + AddPrefixZero(has) //data拼接
-	//gaspric,_:= GasPrice()
-	//fmt.Println("Data拼装：", data)
+	has := fmt.Sprintf("%x", convertAmount)                         //格式化数据
+	data := TTtransferCode + AddPrefixZero(to) + AddPrefixZero(has) //data拼接
 	t := T{
-		From:     fromAddress,
+		From:     from,
 		Gas:      600000,                 //600000
-		GasPrice: big.NewInt(4500000000), //big.NewInt(4500000000) 最快到账 60000000000  2500000000  普通：20000000000
+		GasPrice: big.NewInt(4500000000), //big.NewInt(4500000000) 最快到账 60000000000 普通：20000000000
 		To:       token,                  //合约地址
-		//Value:
-		Data: data,
+		Data:     data,
 	}
-	//hash,err:= client.EthPerSendTransaction(t,PWD)
-	//log.Println("GasPrice",gaspric)
 	hash, err := rpc.EthSendTransaction(t)
-
-	if err != nil {
-		log.Println("转账错误:", err.Error())
-	}
-
 	return hash, err
-
 }
 
 //获取合約余额
@@ -454,15 +431,6 @@ func (rpc *EthRPC) TokenTraction(fromAddress, toAddress, token string, decimal i
 //	return inteth
 //
 //}
-
-const (
-	ContractInfoCode_Name         = "0x06fdde03" //获取合约名称
-	ContractInfoCode_Abbreviation = "0x95d89b41" //合约简称
-	ContractInfoCode_Balance      = "0x70a08231" //查询余额
-	ContractInfoCode_Accuracy     = "0x313ce567" //合约精度
-	ContractInfoCode_Total        = "0x18160ddd" //发行总量
-
-)
 
 //获取合約信息
 func (rpc *EthRPC) ContractInfo(from string, token string, code string) (interface{}, error) {
