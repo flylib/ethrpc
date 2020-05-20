@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"regexp"
 )
 
 /**
@@ -1003,4 +1004,10 @@ func (rpc *EthRPC) Eth1() *big.Int {
 // Eth1 returns 1 ethrpc value (10^18 wei)
 func Eth1() *big.Int {
 	return big.NewInt(1000000000000000000)
+}
+
+//验证地址是否是ETH地址
+func CheckETHAddr(addr string) bool {
+	re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+	return re.MatchString(addr)
 }

@@ -138,6 +138,14 @@ func (proxy *proxyBlockWithoutTransactions) toBlock() Block {
 	return block
 }
 
+//transactionHash: DATA, 32 Bytes - 交易的hash.
+//transactionIndex: QUANTITY - 区块中交易index的位置。
+//blockHash: DATA, 32 Bytes - 此交易所处的区块hash。
+//blockNumber: QUANTITY - 此交易所处的区块号
+//cumulativeGasUsed: QUANTITY - 当这笔交易已经在区块中执行完成，所使用的gas总量。
+//gasUsed: QUANTITY - 此特定交易所使用的单个gas金额。
+//contractAddress: DATA, 20 Bytes - 创建的合同地址（如果该交易是创建合约，* 否则为空。
+//logs: Array - 此交易生成的日志对象数组。
 // 交易收据 TransactionReceipt - transaction receipt object
 type TransactionReceipt struct {
 	TransactionHash   string

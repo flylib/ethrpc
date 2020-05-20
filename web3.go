@@ -18,7 +18,7 @@ func (rpc *EthRPC) Web3ClientVersion() (string, error) {
 
 /**
 	Web3Sha3 returns Keccak-256 (not the standardized SHA3-256) of the given data.
-	返回指定数据的Keccak-256（不是标准化的SHA3-256）。
+	返回指定数据的Keccak-256（不是标准化的SHA3-256）哈希值。
 	参数：
 	String - 将数据转化为SHA3哈希
 	params: [

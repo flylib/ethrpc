@@ -1,11 +1,11 @@
 # 以太坊JsonRpc协议
 
 
-## 文档地址
-* https://github.com/ethrpc/wiki/wiki/JSON-RPC[en]  
-* http://cw.hubwiz.com/card/c/ethereum-json-rpc-api/[cn]  
+## 文档参考
+* [英文文档](https://github.com/ethrpc/wiki/wiki/JSON-RPC)
+* [中文文档](http://cw.hubwiz.com/card/c/ethereum-json-rpc-api/)
+* [用Go来做以太坊开发](https://goethereumbook.org/zh/)
 * https://www.jsonrpc.org/specification
-
 
 ##代币价格 
 
