@@ -11,13 +11,6 @@ import (
 	"time"
 )
 
-const PWD = "luce!1989@9922sdf" //密钥
-//const  TAddress  = "0xa376Bd485433699D3D2c1A5322931879503330da"// 归集地址
-//const TADDR  = "0x031CdC6C680Dd7889605f1d9EAE15D22797d0b3E" //归集地址二
-const TADDR = "0x59f8b414805E0Bb0246A0b0CaF72a889cfb92a16"     //归集地址三
-const GASADDRES = "0x7260c1661793170694344bc813be6857ed16e58c" //手续费地址
-const Fromadd = "0x7f5CeDBb4CAC1e31dE6Aa8F02b6Bf882a04Fca35"   //转账地址
-
 const (
 	ContractInfoCode_Name         = "0x06fdde03" //获取合约名称
 	ContractInfoCode_Abbreviation = "0x95d89b41" //合约简称
