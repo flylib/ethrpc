@@ -51,13 +51,12 @@ type BlockHeader struct {
 "uncles": ["0x1606e5...", "0xd5145a9..."]*/
 // 区块链对象
 type Block struct {
-	Number     int    //QUANTITY - 块编号，挂起块为null
-	Hash       string // DATA, 32 Bytes-块哈希，挂起块为null
-	ParentHash string //  DATA, 32 Bytes-父哈希
-	Nonce      string //DATA, 8 Bytes - 生成的pow哈希，挂起块为null（随机值）
-	Sha3Uncles string //DATA, 32 Bytes - 块中叔伯数据的SHA3哈希
-	LogsBloom  string //DATA, 256 Bytes-快日志的bloom过滤器，挂起块为null
-	//State Root、Transaction Root、Receipt Root分别代表了状态树、交易树和交易树的哈希
+	Number           int           //QUANTITY - 块编号，挂起块为null
+	Hash             string        // DATA, 32 Bytes-块哈希，挂起块为null
+	ParentHash       string        //  DATA, 32 Bytes-父哈希
+	Nonce            string        //DATA, 8 Bytes - 生成的pow哈希，挂起块为null（随机值）
+	Sha3Uncles       string        //DATA, 32 Bytes - 块中叔伯数据的SHA3哈希
+	LogsBloom        string        //DATA, 256 Bytes-快日志的bloom过滤器，挂起块为null
 	TransactionsRoot string        //DATA, 32 Bytes - 块中的交易树根节点
 	StateRoot        string        //DATA, 32 Bytes - 块最终状态树的根节点
 	ReceiptsRoot     string        //DATA, 32 Bytes - 块交易收据树的根节点
