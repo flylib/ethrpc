@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	rpc := ethrpc.NewEthRPC("http://192.168.0.220:8545")
+	rpc := ethrpc.NewEthRPC("http://127.0.0.1:7545")
 	version, _ := rpc.Web3ClientVersion()
 	fmt.Println(version)
 	count, _ := rpc.NetPeerCount()
@@ -21,7 +21,8 @@ func main() {
 	//fmt.Println("block=", block)
 	fmt.Println(fmt.Sprintf("transaction=%#v", block.Transactions))
 	ethblocknumber, _ := rpc.EthBlockNumber()
-	fmt.Println("EthBlockNumber=", ethblocknumber)
+	acounts, _ := rpc.EthAccounts()
+	fmt.Println("EthBlockNumber=", ethblocknumber, acounts)
 	addr, _ := rpc.EthCoinbase()
 	fmt.Println("EthCoinbase=", addr)
 	blockNum, _ := rpc.EthBlockNumber()

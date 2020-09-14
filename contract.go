@@ -153,6 +153,7 @@ func (rpc *EthRPC) Traction(toaddress string, value float64) (string, error) {
 	//data:="0x70a08231"+faddr+taddr+vstr //data拼接
 	data := "0xa9059cbb" + AddPrefixZero(taddr) + AddPrefixZero(vs) //data拼接 addPreZero(faddr)
 
+	Fromadd := ""
 	fmt.Println("Data拼装：", data)
 	t := T{
 		From: Fromadd,
@@ -454,8 +455,13 @@ func (rpc *EthRPC) ContractInfo(from string, token string, code string) (interfa
 			return "", err
 		}
 		return string(n), nil
-	case ContractInfoCode_Balance: //查询余额 	//
-		intwei, err := strconv.ParseFloat(resultBigInt.String(), 18) //18
+	case ContractInfoCode_Balance: //查询余额
+		//合约精度
+		decimalValue, err := rpc.ContractInfo(from, token, ContractInfoCode_Accuracy)
+		if err != nil {
+			return "", err
+		}
+		intwei, err := strconv.ParseFloat(resultBigInt.String(), decimalValue.(int))
 		if err != nil {
 			return "", err
 		}
@@ -467,8 +473,13 @@ func (rpc *EthRPC) ContractInfo(from string, token string, code string) (interfa
 		}
 		return pdecimals, nil
 	case ContractInfoCode_Total: //发行总量
-		intwei, _ := strconv.ParseFloat(resultBigInt.String(), 18)
-		inteth := intwei / math.Pow10(18)
+		//合约精度
+		decimalValue, err := rpc.ContractInfo(from, token, ContractInfoCode_Accuracy)
+		if err != nil {
+			return "", err
+		}
+		intwei, _ := strconv.ParseFloat(resultBigInt.String(), decimalValue.(int))
+		inteth := intwei / math.Pow10(decimalValue.(int))
 		return inteth, nil
 	}
 	return nil, errors.New("not found contract code")
