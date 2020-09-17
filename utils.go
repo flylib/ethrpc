@@ -47,3 +47,17 @@ func BigToHex(bigInt big.Int) string {
 
 	return "0x" + strings.TrimPrefix(fmt.Sprintf("%x", bigInt.Bytes()), "0")
 }
+
+/**
+返回指定UTF-8字符串的16进制表示。
+
+参数：
+	string - String: ·UTF-8字符串
+返回：
+	String: 16进制字符串
+*/
+func (rpc *EthRPC) UTF8ToHex(str string) (string, error) {
+	var data string
+	err := rpc.call("utils_utf8ToHex", &data, str)
+	return data, err
+}

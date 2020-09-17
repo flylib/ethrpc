@@ -438,6 +438,7 @@ func (rpc *EthRPC) ContractInfo(from string, token string, code string) (interfa
 		Data: data,  //data
 	}
 	result, err := rpc.EthCall(t, "latest")
+
 	if err != nil {
 		return "", err
 	}
