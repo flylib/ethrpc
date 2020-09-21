@@ -502,6 +502,21 @@ func (rpc *EthRPC) EthSign(address, data string) (string, error) {
 }
 
 /**
+使用web3.eth.signTransaction()方法对交易进行签名，用来签名的账户地址需要首先解锁。
+参数:
+	transactionObject：Object - 要签名的交易数据
+	address：String - 用于签名的账户地址
+	callback：Function - 可选的回调函数，其第一个参数为错误对象，第二个参数为结果
+返回:
+	一个Promise对象，其解析值为RLP编码的交易对象。该对象的raw属性可以用来通过web3.eth.sendSignedTransaction() 方法来发送交易。
+*/
+func (rpc *EthRPC) SignTransaction(t T) (SignPromise, error) {
+	var res SignPromise
+	err := rpc.call("eth_signTransaction", &res, t)
+	return res, err
+}
+
+/**
 	EthSendTransaction creates new message call transaction or a contract creation, if the data field contains code.
 	如果数据字段包含code，则创建新的消息调用交易或创建合约。
 	params
@@ -559,6 +574,26 @@ func (rpc *EthRPC) EthSendRawTransaction(data string) (string, error) {
 	var hash string
 
 	err := rpc.call("eth_sendRawTransaction", &hash, data)
+	return hash, err
+}
+
+/**
+	 EthSendRawTransaction creates new message call transaction or a contract creation for signed transactions.
+	 为已签名的交易创建新的消息调用交易或合约创建。
+	参数
+		Object - 交易对象
+		data: DATA, 已签名的交易数据。
+		params: [{
+  			"data": "0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445675"
+		}]
+	返回：
+		DATA, 32 Bytes - 交易hash，或0（如果交易还不可用）。
+
+		当你创建的是一个合约时，使用eth_getTransactionReceipt来获取指定的合约地址。
+*/
+func (rpc *EthRPC) EthSendSignedTransaction(data string) (string, error) {
+	var hash string
+	err := rpc.call("eth_sendSignedTransaction", &hash, data)
 	return hash, err
 }
 

@@ -25,20 +25,33 @@ func Transfer(from, to, pwd string, amount float64) error {
 	if !ok {
 		return errors.New("解锁钱包失败!")
 	}
-	t := ethrpc.T{
-		From: from,
-		To:   to,
-		//Gas:      600000,                  //600000  default:21000
-		//GasPrice: big.NewInt(20000000000), //big.NewInt(4500000000) 最快到账 60000000000 普通：20000000000   default:1000000000
-		Value: big.NewInt(int64(amount)),
-	}
-	transaction, err := rpcJson.EthSendTransaction(t)
+	nonce, err := rpcJson.EthGetTransactionCount(from, "pending")
+	price, err := rpcJson.EthGasPrice()
 	if err != nil {
 		panic(err)
-		return err
 	}
-	fmt.Println(transaction)
+	//fmt.Println(:"",price.Int64())
 
+	t := ethrpc.T{
+		From:     from,
+		To:       to,
+		Gas:      600000, //600000  default:21000
+		GasPrice: &price, //big.NewInt(4500000000) 最快到账 60000000000 普通：20000000000   default:1000000000
+		Value:    big.NewInt(int64(amount)),
+		Nonce:    nonce,
+	}
+	//transaction, err := rpcJson.EthSendTransaction(t)
+	//if err != nil {
+	//	panic(err)
+	//	return err
+	//}
+	//fmt.Println(transaction)
+
+	s, err := rpcJson.SignTransaction(t)
+	fmt.Println(s, err)
+	fmt.Printf("%+v", s)
+	ss, err := rpcJson.EthSendRawTransaction(s.Raw)
+	fmt.Println(ss, err)
 	//bytes, _ := json.Marshal(t)
 	//// 将 byte 装换为 16进制的字符串
 	//hexStringData := hex.EncodeToString(bytes)
