@@ -5,6 +5,15 @@ import (
 	"math/big"
 )
 
+//from Address - Address the transaction is send from.
+//data Data - Compiled code of a contract OR the hash of the invoked method signature and encoded parameters.
+//to Address - Address the transaction is send to.
+//gas Integer - Gas provided for the transaction execution. It will return unused gas.
+//gas_price Integer - Value of the gas for this transaction.
+//value Integer - Value sent with the transaction.
+//nonce Integer - Value of the nonce. This allows to overwrite your own pending transactions that use the same nonce.
+//Gas:      600000,                  //600000  default:21000
+//GasPrice: big.NewInt(20000000000), //big.NewInt(4500000000) 最快到账 60000000000 普通：20000000000   default:1000000000
 // T - input transaction object
 //输入交易事务结构体
 type T struct {
