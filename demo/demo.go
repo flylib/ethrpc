@@ -26,6 +26,7 @@ func Transfer(from, to, pwd string, amount float64) error {
 		return errors.New("解锁钱包失败!")
 	}
 	nonce, err := rpcJson.EthGetTransactionCount(from, "pending")
+	fmt.Println("nonce", nonce)
 	price, err := rpcJson.EthGasPrice()
 	if err != nil {
 		panic(err)
@@ -48,8 +49,9 @@ func Transfer(from, to, pwd string, amount float64) error {
 	//fmt.Println(transaction)
 
 	s, err := rpcJson.SignTransaction(t)
-	fmt.Println(s, err)
+	//fmt.Println(s, err)
 	fmt.Printf("%+v", s)
+	fmt.Println()
 	ss, err := rpcJson.EthSendRawTransaction(s.Raw)
 	fmt.Println(ss, err)
 	//bytes, _ := json.Marshal(t)
