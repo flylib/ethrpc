@@ -202,7 +202,7 @@ func TrimPrefixZero(str string) string {
 func (rpc *EthRPC) newAccount(nu string) {
 
 	for i := 0; i <= 1000; i++ {
-		account, _ := rpc.EthPerNewAccount("luce!1989@9922sdf")
+		account, _ := rpc.PersonalNewAccount("luce!1989@9922sdf")
 		fmt.Println(nu, " 数量：", i, "-", account)
 		time.Sleep(300)
 	}
@@ -211,7 +211,7 @@ func (rpc *EthRPC) newAccount(nu string) {
 //列出本地钱包
 func (rpc *EthRPC) ListAccount() []string {
 
-	list, err := rpc.EthPerListAccounts()
+	list, err := rpc.PersonalListAccounts()
 	if err != nil {
 		log.Println("列出地址失败：", err.Error())
 	}
