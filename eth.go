@@ -70,7 +70,7 @@ type EthereumAPI interface {
 	EthGetLogs(params FilterParams) ([]Log, error)
 }
 
-var _ EthereumAPI = (*EthRPC)(nil)
+//var _ EthereumAPI = (*EthRPC)(nil)
 
 //http客户端接口
 type httpClient interface {
@@ -443,24 +443,35 @@ func (rpc *EthRPC) EthGetUncleCountByBlockHash(hash string) (int, error) {
 }
 
 /**
-EthGetUncleCountByBlockNumber returns the number of uncles in a block from a block matching the given block number.
-通过指定的区块号，返回uncle数量。
+返回具有指定哈希的块具有指定索引位置的叔伯。
 参数
-QUANTITY - 区块号, 或 "latest", "earliest", "pending"
-params: [
-'0xe8', // 232
-]
+	DATA, 32字节 - 块哈希
+	QUANTITY - 叔伯索引位置
+	params: [
+	   '0xc6ef2fc5426d6ad6fd9e2a26abeab0aa2411b7ab17f30a99d3cb96aed1d1055b',
+	   '0x0' // 0
+	]
 返回
-QUANTITY - integer of the number of uncles in this block.
+	响应结果请参考eth_getBlockByHash调用。
 */
-func (rpc *EthRPC) EthGetUncleCountByBlockNumber(number int) (int, error) {
-	var response string
+func (rpc *EthRPC) EthGetUncleByBlockHashAndIndex(hash string, index int) (*Block, error) {
+	return rpc.getBlock("eth_getUncleByBlockHashAndIndex", false, hash, IntToHex(index))
+}
 
-	if err := rpc.call("eth_getUncleCountByBlockNumber", &response, IntToHex(number)); err != nil {
-		return 0, err
-	}
-
-	return ParseInt(response)
+/**
+返回具有指定哈希的块具有指定索引位置的叔伯。
+参数
+	QUANTITY|TAG - 整数块编号，或字符串"earliest"、"latest" 或"pending"
+	QUANTITY - 叔伯在块内的索引序号
+	params: [
+	   '0x29c', // 668
+	   '0x0' // 0
+	]
+返回
+	响应结果请参考eth_getBlockByHash调用。
+*/
+func (rpc *EthRPC) EthGetUncleByBlockNumberAndIndex(number int, index int) (*Block, error) {
+	return rpc.getBlock("eth_getUncleByBlockNumberAndIndex", false, IntToHex(number), IntToHex(index))
 }
 
 /**

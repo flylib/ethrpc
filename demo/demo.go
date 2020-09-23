@@ -18,7 +18,7 @@ func Transfer(from, to, pwd string, amount float64) error {
 	if balance < amount {
 		return errors.New("余额不足！")
 	}
-	ok, err := rpcJson.EthPerUnLockAccount(from, pwd)
+	ok, err := rpcJson.PersonalUnLockAccount(from, pwd)
 	if err != nil {
 		return err
 	}
@@ -100,6 +100,8 @@ func main() {
 	//s, i := rpc.MinerSetEtherBase("0xd5693661f30c834f63577380ed0f673b7ef9d3c9")
 	//fmt.Println(s, i)
 	//wei, e := rpc.EthGetBalance("0xe7f344e7b95c8a19d7d77ea27b86ee2fd6d776cf", "latest")
+	index, err2 := rpcJson.EthGetUncleByBlockNumberAndIndex(129, 0)
+	fmt.Println(index, err2)
 	gasPrice, i := rpcJson.EthGasPrice()
 	fmt.Println(gasPrice.Int64(), i)
 
