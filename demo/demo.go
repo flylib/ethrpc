@@ -4,20 +4,46 @@ import (
 	"errors"
 	"fmt"
 	"github.com/zjllib/ethrpc"
+	"io/ioutil"
 	"math/big"
 )
 
-func Transfer(from, to, pwd string, amount float64) error {
-	amount = amount * 1e+18
-	balanceBig, err := rpcJson.EthGetBalance(from, "latest")
-	if err != nil {
-		return err
-	}
+//var rpcJson = ethrpc.NewEthRPC("http://192.168.0.122:39005")
+var rpcJson = ethrpc.NewEthRPC("http://explorer.gbcoin.gold/node")
 
-	balance, _ := new(big.Float).SetInt(&balanceBig).Float64()
-	if balance < amount {
-		return errors.New("余额不足！")
+//外网ETH节点：http://www.auecoin.com/eth
+//用户名：gethnode88669s1 密码：Gh875ds22kws03232wq
+func init() {
+	//无需认证：http://www.auecoin.com/ethyyuyewnkks7e453sxsa76w3sakanode
+	//act := ethrpc.Account{
+	//	User: "gethnode88669s1",
+	//	PWD:  "Gh875ds22kws03232wq",
+	//}
+	////rpcJson = ethrpc.NewEthRPC("http://www.auecoin.com/eth", ethrpc.SetAuthType(ethrpc.AuthBasicAuth),
+	//rpcJson = ethrpc.NewEthRPC("http://www.auecoin.com/ethyyuyewnkks7e453sxsa76w3sakanode", ethrpc.SetAuthType(ethrpc.AuthNone),
+	//	ethrpc.SetBasicAuth(act), ethrpc.Debug())
+	number, err := rpcJson.EthBlockNumber()
+	if err != nil {
+		fmt.Println(err)
 	}
+	fmt.Println(number)
+}
+
+func Transfer(from, to, pwd string, amount float64) error {
+	bigAmount := big.NewInt(0).Mul(big.NewInt(int64(amount*1e+8)), big.NewInt(1e+10))
+	//amount = amount * 1e+18
+	//balanceBig, err := rpcJson.EthGetBalance(from, "latest")
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//balance, _ := new(big.Float).SetInt(bigAmount).Float64()
+	//if balance < amount {
+	//	return errors.New("余额不足！")
+	//}
+	fmt.Println(len("0xcf06ad2594ce2a7315d3c8bfec1dc76d2992ec6ac14a4dce8fc3546afc5addcc"))
+	blance, err2 := GetBlance(from)
+	fmt.Println(blance, err2)
 	ok, err := rpcJson.PersonalUnLockAccount(from, pwd)
 	if err != nil {
 		return err
@@ -32,13 +58,15 @@ func Transfer(from, to, pwd string, amount float64) error {
 		panic(err)
 	}
 	//fmt.Println(:"",price.Int64())
+	//ethrpc.OfflineTransfer(1, uint64(nonce), to, bigAmount, "")
 
+	fmt.Println(int64(amount))
 	t := ethrpc.T{
 		From:     from,
 		To:       to,
-		Gas:      600000, //600000  default:21000
+		Gas:      21000,  //600000  default:21000
 		GasPrice: &price, //big.NewInt(4500000000) 最快到账 60000000000 普通：20000000000   default:1000000000
-		Value:    big.NewInt(int64(amount)),
+		Value:    bigAmount,
 		Nonce:    nonce,
 	}
 	//transaction, err := rpcJson.EthSendTransaction(t)
@@ -67,16 +95,30 @@ func Transfer(from, to, pwd string, amount float64) error {
 	return err
 }
 
-var rpcJson = ethrpc.NewEthRPC("http://192.168.0.122:39005")
-
 //获取余额
-func getBlance(from string) (float64, error) {
+//获取余额
+func GetBlance(from string) (float64, error) {
 	wei, err := rpcJson.EthGetBalance(from, "latest")
-	balance, _ := new(big.Float).SetInt(&wei).Float64()
-	return balance / 1e+18, err
+	balance, _ := big.NewFloat(0).Quo(new(big.Float).SetInt(&wei), new(big.Float).SetFloat64(1e+18)).Float64()
+	return balance, err
 }
 
 func main() {
+	file, err := ioutil.ReadFile("./demo/UTC--2020-09-19T06-00-03.502591131Z--d5693661f30c834f63577380ed0f673b7ef9d3c9")
+	if err != nil {
+		panic(err)
+	}
+	//key, err := ethrpc.KeystoreToPrivateKey(file, "123456")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(key)
+	fmt.Println(file)
+	return
+	//fmt.Println(big.NewInt(0).Mul(big.NewInt(1e+8), big.NewInt(1e+10)).Int64())
+	//fmt.Println(len("1000000000000000000"))
+	//fmt.Println(fmt.Sprintf("%f", 1e+18))
+	//fmt.Println()
 	//ok, err := rpcJson.EthPerUnLockAccount("0xd5693661f30c834f63577380ed0f673b7ef9d3c9", "123456")
 	//if err != nil {
 	//	panic(err)
@@ -112,71 +154,31 @@ func main() {
 	//}
 	//fmt.Println(wei.Int64())
 	//fmt.Println(new(big.Float).SetInt(&wei).Float64() / 1e+18)
-	f, e := getBlance("0xd5693661f30c834f63577380ed0f673b7ef9d3c9")
+	f, e := GetBlance("0xd5693661f30c834f63577380ed0f673b7ef9d3c9")
 	if e != nil {
 		panic(e)
 	}
 	fmt.Println(f)
-	Transfer("0xd5693661f30c834f63577380ed0f673b7ef9d3c9", "0x332d51875124dcabcf46bb4be7ec1cb81b1d1f32", "123456", 1)
+	//质押
+	Transfer(
+		"0xd5693661f30c834f63577380ed0f673b7ef9d3c9",
+		"0xbdaf3976466e0531b377aab2432c9645506afb46",
+		"123456", 10)
+	//质押
+	Transfer(
+		"0xd5693661f30c834f63577380ed0f673b7ef9d3c9",
+		"0xbdaf3976466e0531b377aab2432c9645506afb46",
+		"123456", 10) //质押
+	Transfer(
+		"0xd5693661f30c834f63577380ed0f673b7ef9d3c9",
+		"0xbdaf3976466e0531b377aab2432c9645506afb46",
+		"123456", 10)
+	//燃烧池
+	//Transfer(
+	//	"0xd5693661f30c834f63577380ed0f673b7ef9d3c9",
+	//	"0x46f8178169312bce2405283bc9be2b3e3bc489f9",
+	//	"123456", 200)
+	balance, err2 := rpcJson.GetBalance("0x46f8178169312bce2405283bc9be2b3e3bc489f9")
+	fmt.Println(balance, err2)
 	return
-	//t := ethrpc.T{
-	//	From:     "0xe7f344e7b95c8a19d7d77ea27b86ee2fd6d776cf",
-	//	To:       "0xe7f344e7b95c8a19d7d77ea27b86ee2fd6d776cf",
-	//	Gas:      600000,                 //600000
-	//	GasPrice: big.NewInt(4500000000), //big.NewInt(4500000000) 最快到账 60000000000 普通：20000000000
-	//	Value:    big.NewInt(int64(10000000000000)),
-	//}
-	//bytes, e := json.Marshal(t)
-	//if e != nil {
-	//	panic(e)
-	//}
-	//fmt.Println(string(bytes))
-	//fmt.Println(1e+18)
-	//fmt.Println(wei.Int64())
-	//fmt.Println(float64(wei.Int64()) / 0.02895)
-	version, _ := rpcJson.Web3ClientVersion()
-	fmt.Println(version)
-	count, _ := rpcJson.NetPeerCount()
-	fmt.Println(count)
-	sync, _ := rpcJson.EthSyncing()
-	fmt.Println(fmt.Sprintf("EthSyncing=%#v", sync))
-	block, err := rpcJson.EthGetBlockByNumber(sync.CurrentBlock, false)
-	if err != nil {
-		fmt.Println("error get EthGetBlockByNumber = ", err)
-	}
-	//t, err := rpc.EthGetTransactionByHash(block.Hash)
-	//fmt.Println("block=", block)
-	fmt.Println(fmt.Sprintf("transaction=%#v", block.Transactions))
-	ethblocknumber, _ := rpcJson.EthBlockNumber()
-	acounts, _ := rpcJson.EthAccounts()
-	fmt.Println("EthBlockNumber=", ethblocknumber, acounts)
-	addr, _ := rpcJson.EthCoinbase()
-	fmt.Println("EthCoinbase=", addr)
-	blockNum, _ := rpcJson.EthBlockNumber()
-	fmt.Println("blockNum=", blockNum)
-	isMining, _ := rpcJson.EthMining()
-	fmt.Println(isMining)
-	adds, _ := rpcJson.EthAccounts()
-	fmt.Println(adds)
-	balance, err := rpcJson.EthGetBalance(adds[1], ethrpc.BlockTag_Latest)
-	if err != nil {
-		fmt.Println("error get EthGetBalance = ", err)
-	}
-	fmt.Println("balance=", balance.Int64(), 1e+18)
-	price, _ := rpcJson.EthGasPrice()
-	fmt.Println("price=", price)
-	prvVersion, _ := rpcJson.EthProtocolVersion()
-	fmt.Println("prvVersion=", prvVersion)
-
-	blockHight, err := rpcJson.EthBlockNumber()
-	if err != nil {
-		panic(err)
-		return
-	}
-
-	curBlock, err := rpcJson.EthGetBlockByNumber(blockHight, false)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(curBlock)
 }

@@ -168,7 +168,7 @@ type TransactionReceipt struct {
 }
 
 //代理交易收据
-type proxyTransactionReceipt struct {
+type ProxyTransactionReceipt struct {
 	TransactionHash   string `json:"transactionHash"`
 	TransactionIndex  hexInt `json:"transactionIndex"`
 	BlockHash         string `json:"blockHash"`
@@ -184,7 +184,7 @@ type proxyTransactionReceipt struct {
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
 func (t *TransactionReceipt) UnmarshalJSON(data []byte) error {
-	proxy := new(proxyTransactionReceipt)
+	proxy := new(ProxyTransactionReceipt)
 	if err := json.Unmarshal(data, proxy); err != nil {
 		return err
 	}

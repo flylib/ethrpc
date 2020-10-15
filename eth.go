@@ -26,50 +26,6 @@ const (
 	V2 = "2.0"
 )
 
-//ETHAPI接口
-type EthereumAPI interface {
-	Web3ClientVersion() (string, error)
-	Web3Sha3(data []byte) (string, error)
-	NetVersion() (string, error)
-	NetListening() (bool, error)
-	NetPeerCount() (int, error)
-	EthProtocolVersion() (string, error)
-	EthSyncing() (*Syncing, error)
-	EthCoinbase() (string, error)
-	EthMining() (bool, error)
-	EthHashrate() (int, error)
-	EthGasPrice() (big.Int, error)
-	EthAccounts() ([]string, error)
-	EthBlockNumber() (int, error)
-	EthGetBalance(address, block string) (big.Int, error)
-	EthGetStorageAt(data string, position int, tag string) (string, error)
-	EthGetTransactionCount(address, block string) (int, error)
-	EthGetBlockTransactionCountByHash(hash string) (int, error)
-	EthGetBlockTransactionCountByNumber(number int) (int, error)
-	EthGetUncleCountByBlockHash(hash string) (int, error)
-	EthGetUncleCountByBlockNumber(number int) (int, error)
-	EthGetCode(address, block string) (string, error)
-	EthSign(address, data string) (string, error)
-	EthSendTransaction(transaction T) (string, error)
-	EthSendRawTransaction(data string) (string, error)
-	EthCall(transaction T, tag string) (string, error)
-	EthEstimateGas(transaction T) (int, error)
-	EthGetBlockByHash(hash string, withTransactions bool) (*Block, error)
-	EthGetBlockByNumber(number int, withTransactions bool) (*Block, error)
-	EthGetTransactionByHash(hash string) (*Transaction, error)
-	EthGetTransactionByBlockHashAndIndex(blockHash string, transactionIndex int) (*Transaction, error)
-	EthGetTransactionByBlockNumberAndIndex(blockNumber, transactionIndex int) (*Transaction, error)
-	EthGetTransactionReceipt(hash string) (*TransactionReceipt, error)
-	EthGetCompilers() ([]string, error)
-	EthNewFilter(params FilterParams) (string, error)
-	EthNewBlockFilter() (string, error)
-	EthNewPendingTransactionFilter() (string, error)
-	EthUninstallFilter(filterID string) (bool, error)
-	EthGetFilterChanges(filterID string) ([]Log, error)
-	EthGetFilterLogs(filterID string) ([]Log, error)
-	EthGetLogs(params FilterParams) ([]Log, error)
-}
-
 //var _ EthereumAPI = (*EthRPC)(nil)
 
 //http客户端接口
@@ -77,14 +33,29 @@ type httpClient interface {
 	Post(url string, contentType string, body io.Reader) (*http.Response, error)
 }
 
+const (
+	AuthNone      = iota //none
+	AuthBasicAuth        //基本认证
+	AuthMD5              //MD5加密
+	AuthToken            //token
+)
+
 // EthRPC - Ethereum rpc client
 //以太坊RPC客户端结构体
 type EthRPC struct {
-	url     string     //URL链接
-	client  httpClient //客户端对象
-	log     logger     //日志
-	Debug   bool       //调试
-	Version string     //版本
+	url       string     //URL链接
+	client    httpClient //客户端对象
+	log       logger     //日志
+	Debug     bool       //调试
+	Version   string     //版本
+	Auth      int        //认证方式
+	BasicAuth Account
+}
+
+//基本认证
+type Account struct {
+	User string `json:"user"`
+	PWD  string `json:"pwd"`
 }
 
 // NewEthRPC create new rpc client with given url
@@ -119,46 +90,81 @@ func (rpc *EthRPC) URL() string {
 	return rpc.url
 }
 
+//设置授权方式
+func SetAuthType(auth int) func(rpc *EthRPC) {
+	return func(rpc *EthRPC) {
+		rpc.Auth = auth
+	}
+}
+
+//设置授权方式
+func SetBasicAuth(act Account) func(rpc *EthRPC) {
+	return func(rpc *EthRPC) {
+		rpc.BasicAuth = act
+	}
+}
+
+//设置授权方式
+func Debug() func(rpc *EthRPC) {
+	return func(rpc *EthRPC) {
+		rpc.Debug = true
+	}
+}
+
+// 设置认证方式
+func (rpc *EthRPC) SetAuthType(authType int) {
+	rpc.Auth = authType
+}
+
 // Call returns raw response of method call
 func (rpc *EthRPC) Call(method string, params ...interface{}) (json.RawMessage, error) {
-	request := Request{
+	req := Request{
 		ID:      1,
-		JSONRPC: rpc.Version,
+		JsonRPC: rpc.Version,
 		Method:  method,
 		Params:  params,
 	}
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
-	response, err := rpc.client.Post(rpc.url, "application/json", bytes.NewBuffer(body))
-	if response != nil {
-		defer response.Body.Close()
-	}
+	reqData, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(response.Body)
+	newRequest, err := http.NewRequest("POST", rpc.url, bytes.NewBuffer(reqData))
 	if err != nil {
 		return nil, err
 	}
-
+	//基本认证
+	if rpc.Auth == AuthBasicAuth {
+		newRequest.SetBasicAuth(rpc.BasicAuth.User, rpc.BasicAuth.PWD)
+	}
+	newRequest.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	res, err := client.Do(newRequest)
+	if err != nil {
+		return nil, err
+	}
+	//res, err := rpc.client.Post(rpc.url, "application/json", bytes.NewBuffer(reqData))
+	//if err != nil {
+	//	return nil, err
+	//}
+	defer res.Body.Close()
+	resData, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 	if rpc.Debug {
-		rpc.log.Println(fmt.Sprintf("%s\nRequest: %s\nResponse: %s\n", method, body, data))
+		rpc.log.Println(fmt.Sprintf("%s\nRequest: %s\nResponse: %s\n", method, reqData, resData))
 	}
-
-	resp := new(Response)
-	if err := json.Unmarshal(data, resp); err != nil {
+	resETHObject := new(Response)
+	if err := json.Unmarshal(resData, resETHObject); err != nil {
 		return nil, err
 	}
 
-	if resp.Error != nil {
-		return nil, *resp.Error
+	if resETHObject.Error != nil {
+		return nil, *resETHObject.Error
 	}
 
-	return resp.Result, nil
+	return resETHObject.Result, nil
 }
 
 // RawCall returns raw response of method call (Deprecated) (弃用)
@@ -997,15 +1003,17 @@ func (rpc *EthRPC) EthGetLogs(params FilterParams) ([]Log, error) {
 	return logs, err
 }
 
-// Eth1 returns 1 ethrpc value (10^18 wei)
-//返回 1个ETH的值
-func (rpc *EthRPC) Eth1() *big.Int {
-	return Eth1()
-}
+//eth<=>wei
+var ethWeiPrice = new(big.Float).SetFloat64(1e+18)
 
-// Eth1 returns 1 ethrpc value (10^18 wei)
-func Eth1() *big.Int {
-	return big.NewInt(1000000000000000000)
+//获取余额
+func (rpc *EthRPC) GetBalance(from string) (float64, error) {
+	wei, err := rpc.EthGetBalance(from, "latest")
+	if err != nil {
+		return 0, err
+	}
+	balance, _ := big.NewFloat(0).Quo(new(big.Float).SetInt(&wei), ethWeiPrice).Float64()
+	return balance, err
 }
 
 //验证地址是否是ETH地址
