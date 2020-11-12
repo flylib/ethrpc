@@ -43,7 +43,8 @@ package ethrpc
 //
 //
 //
-////私钥==>ecdsa.PrivateKey
+
+//私钥==>ecdsa.PrivateKey
 //func StringToPrivateKey(privateKeyStr string) (*ecdsa.PrivateKey, error) {
 //	privateKeyByte, err := hexutil.Decode(privateKeyStr)
 //	if err != nil {
@@ -56,7 +57,7 @@ package ethrpc
 //	return privateKey, nil
 //}
 //
-////keystore+password===>ecdsa.PrivateKey
+//keystore+password===>ecdsa.PrivateKey
 //func KeystoreToPrivateKey(keystoreContent []byte, password string) (*ecdsa.PrivateKey, error) {
 //	unlockedKey, err := keystore.DecryptKey(keystoreContent, password)
 //	if err != nil {

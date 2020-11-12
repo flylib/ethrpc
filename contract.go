@@ -458,21 +458,14 @@ func (rpc *EthRPC) ContractInfo(from string, token string, code string) (interfa
 		return string(n), nil
 	case ContractInfoCode_Balance: //查询余额
 		//合约精度
-		decimalValue, err := rpc.ContractInfo(from, token, ContractInfoCode_Accuracy)
+		decimal, err := rpc.ContractInfo(from, token, ContractInfoCode_Accuracy)
 		if err != nil {
 			return "", err
 		}
-		intwei, err := strconv.ParseFloat(resultBigInt.String(), decimalValue.(int))
-		if err != nil {
-			return "", err
-		}
-		return intwei, nil
+		balance, _ := big.NewFloat(0).Quo(big.NewFloat(0).SetInt(&resultBigInt), big.NewFloat(0).SetInt64(decimal.(int64))).Float64()
+		return balance, nil
 	case ContractInfoCode_Accuracy: //合约精度
-		pdecimals, err := strconv.Atoi(resultBigInt.String())
-		if err != nil {
-			return "", err
-		}
-		return pdecimals, nil
+		return resultBigInt.Int64(), nil
 	case ContractInfoCode_Total: //发行总量
 		//合约精度
 		decimalValue, err := rpc.ContractInfo(from, token, ContractInfoCode_Accuracy)

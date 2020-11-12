@@ -13,7 +13,7 @@ sets the etherbase, where mining rewards will go.
 */
 func (rpc *EthRPC) MinerSetEtherBase(addr string) (bool, error) {
 	var data bool
-	err := rpc.call("miner_setEtherbase", &data, addr)
+	err := rpc.request("miner_setEtherbase", &data, addr)
 	return data, err
 }
 
@@ -31,7 +31,7 @@ sets the minimal accepted gas price when mining transactions. Any transactions t
 */
 func (rpc *EthRPC) MinerSetGasPrice(price int64) (bool, error) {
 	var data bool
-	err := rpc.call("miner_setGasPrice", &data, price)
+	err := rpc.request("miner_setGasPrice", &data, price)
 	return data, err
 }
 
@@ -48,7 +48,7 @@ starts the CPU mining process with the given number of threads.
 */
 func (rpc *EthRPC) MinerStart(threads int64) (bool, error) {
 	var data bool
-	err := rpc.call("miner_start", &data, threads)
+	err := rpc.request("miner_start", &data, threads)
 	return data, err
 }
 
@@ -64,7 +64,7 @@ Mining process to be stopped.
 */
 func (rpc *EthRPC) MinerStop() (bool, error) {
 	var data bool
-	err := rpc.call("miner_stop", &data)
+	err := rpc.request("miner_stop", &data)
 	return data, err
 }
 
@@ -79,7 +79,7 @@ miner的getHashrate方法返回当前挖矿的哈希生成速率
 */
 func (rpc *EthRPC) MinerGetHashRate() (int64, error) {
 	var data int64
-	err := rpc.call("miner_getHashrate", &data)
+	err := rpc.request("miner_getHashrate", &data)
 	return data, err
 }
 
@@ -119,6 +119,6 @@ Checks whether the CPU miner is running.
 */
 func (rpc *EthRPC) MinerIsMining() (bool, error) {
 	var data bool
-	err := rpc.call("miner_isMining", &data)
+	err := rpc.request("miner_isMining", &data)
 	return data, err
 }

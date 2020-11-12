@@ -10,7 +10,7 @@ String - 当前网络协议版本
 */
 func (rpc *EthRPC) NetVersion() (string, error) {
 	var version string
-	err := rpc.call("net_version", &version)
+	err := rpc.request("net_version", &version)
 	return version, err
 }
 
@@ -25,7 +25,7 @@ Boolean - 当监听时为true，否则为false。
 func (rpc *EthRPC) NetListening() (bool, error) {
 	var listening bool
 
-	err := rpc.call("net_listening", &listening)
+	err := rpc.request("net_listening", &listening)
 	return listening, err
 }
 
@@ -39,7 +39,7 @@ QUANTITY - 已连接对等的数量的整数。
 */
 func (rpc *EthRPC) NetPeerCount() (int, error) {
 	var response string
-	if err := rpc.call("net_peerCount", &response); err != nil {
+	if err := rpc.request("net_peerCount", &response); err != nil {
 		return 0, err
 	}
 

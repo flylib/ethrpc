@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="06b16ee7-c62b-4ad2-b3d4-40c4bb386f1a" name="116" url="http://116.62.245.150">
+        <fileTransfer host="116.62.245.150" port="22" rootFolder="/home/gopath/project/ethrpc" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

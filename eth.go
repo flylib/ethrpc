@@ -3,174 +3,9 @@ package ethrpc
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
 	"math/big"
-	"net/http"
-	"os"
 	"regexp"
 )
-
-/**
- *@Project     openchain
- *@Author      king
- *@CreateTime  2020/4/18 1:41 下午
- *@ClassName   api
- *@Description  ethereum jsonRPC  API 接口
- */
-
-const (
-	v1 = "1.0"
-	V2 = "2.0"
-)
-
-//var _ EthereumAPI = (*EthRPC)(nil)
-
-//http客户端接口
-type httpClient interface {
-	Post(url string, contentType string, body io.Reader) (*http.Response, error)
-}
-
-const (
-	AuthNone      = iota //none
-	AuthBasicAuth        //基本认证
-	AuthMD5              //MD5加密
-	AuthToken            //token
-)
-
-// EthRPC - Ethereum rpc client
-//以太坊RPC客户端结构体
-type EthRPC struct {
-	url       string     //URL链接
-	client    httpClient //客户端对象
-	log       logger     //日志
-	Debug     bool       //调试
-	Version   string     //版本
-	Auth      int        //认证方式
-	BasicAuth Account
-}
-
-//基本认证
-type Account struct {
-	User string `json:"user"`
-	PWD  string `json:"pwd"`
-}
-
-// NewEthRPC create new rpc client with given url
-func NewEthRPC(url string, options ...func(rpc *EthRPC)) *EthRPC {
-	rpc := &EthRPC{
-		url:     url,
-		client:  http.DefaultClient,
-		log:     log.New(os.Stderr, "", log.LstdFlags),
-		Version: V2,
-	}
-	for _, option := range options {
-		option(rpc)
-	}
-	return rpc
-}
-
-func (rpc *EthRPC) call(method string, target interface{}, params ...interface{}) error {
-	result, err := rpc.Call(method, params...)
-	if err != nil {
-		return err
-	}
-
-	if target == nil {
-		return nil
-	}
-
-	return json.Unmarshal(result, target)
-}
-
-// URL returns client url
-func (rpc *EthRPC) URL() string {
-	return rpc.url
-}
-
-//设置授权方式
-func SetAuthType(auth int) func(rpc *EthRPC) {
-	return func(rpc *EthRPC) {
-		rpc.Auth = auth
-	}
-}
-
-//设置授权方式
-func SetBasicAuth(act Account) func(rpc *EthRPC) {
-	return func(rpc *EthRPC) {
-		rpc.BasicAuth = act
-	}
-}
-
-//设置授权方式
-func Debug() func(rpc *EthRPC) {
-	return func(rpc *EthRPC) {
-		rpc.Debug = true
-	}
-}
-
-// 设置认证方式
-func (rpc *EthRPC) SetAuthType(authType int) {
-	rpc.Auth = authType
-}
-
-// Call returns raw response of method call
-func (rpc *EthRPC) Call(method string, params ...interface{}) (json.RawMessage, error) {
-	req := Request{
-		ID:      1,
-		JsonRPC: rpc.Version,
-		Method:  method,
-		Params:  params,
-	}
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
-
-	newRequest, err := http.NewRequest("POST", rpc.url, bytes.NewBuffer(reqData))
-	if err != nil {
-		return nil, err
-	}
-	//基本认证
-	if rpc.Auth == AuthBasicAuth {
-		newRequest.SetBasicAuth(rpc.BasicAuth.User, rpc.BasicAuth.PWD)
-	}
-	newRequest.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	res, err := client.Do(newRequest)
-	if err != nil {
-		return nil, err
-	}
-	//res, err := rpc.client.Post(rpc.url, "application/json", bytes.NewBuffer(reqData))
-	//if err != nil {
-	//	return nil, err
-	//}
-	defer res.Body.Close()
-	resData, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	if rpc.Debug {
-		rpc.log.Println(fmt.Sprintf("%s\nRequest: %s\nResponse: %s\n", method, reqData, resData))
-	}
-	resETHObject := new(Response)
-	if err := json.Unmarshal(resData, resETHObject); err != nil {
-		return nil, err
-	}
-
-	if resETHObject.Error != nil {
-		return nil, *resETHObject.Error
-	}
-
-	return resETHObject.Result, nil
-}
-
-// RawCall returns raw response of method call (Deprecated) (弃用)
-func (rpc *EthRPC) RawCall(method string, params ...interface{}) (json.RawMessage, error) {
-	return rpc.Call(method, params...)
-}
 
 /**
 EthProtocolVersion returns the current ethrpc protocol version.
@@ -183,7 +18,7 @@ String - The current ethrpc protocol version
 func (rpc *EthRPC) EthProtocolVersion() (string, error) {
 	var protocolVersion string
 
-	err := rpc.call("eth_protocolVersion", &protocolVersion)
+	err := rpc.request("eth_protocolVersion", &protocolVersion)
 	return protocolVersion, err
 }
 
@@ -200,7 +35,7 @@ currentBlock: QUANTITY - 当前块,与eth_blockNumber相同
 highestBlock: QUANTITY - 估算的最高区块
 */
 func (rpc *EthRPC) EthSyncing() (*Syncing, error) {
-	result, err := rpc.RawCall("eth_syncing")
+	result, err := rpc.call("eth_syncing")
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +58,7 @@ DATA, 20 bytes - 当前coinbase的地址.
 func (rpc *EthRPC) EthCoinbase() (string, error) {
 	var address string
 
-	err := rpc.call("eth_coinbase", &address)
+	err := rpc.request("eth_coinbase", &address)
 	return address, err
 }
 
@@ -237,22 +72,22 @@ Boolean - 客户端主动的挖矿返回true，否则为false。
 */
 func (rpc *EthRPC) EthMining() (bool, error) {
 	var mining bool
-	err := rpc.call("eth_mining", &mining)
+	err := rpc.request("eth_mining", &mining)
 	return mining, err
 }
 
 /**
-EthHashrate returns the number of hashes per second that the node is mining with.
+EthHashRate returns the number of hashes per second that the node is mining with.
 返回节点正在挖掘的每秒散列数。
 参数：
 none
 返回：
 QUANTITY - 每秒的哈希数。
 */
-func (rpc *EthRPC) EthHashrate() (int, error) {
+func (rpc *EthRPC) EthHashRate() (int, error) {
 	var response string
 
-	if err := rpc.call("eth_hashrate", &response); err != nil {
+	if err := rpc.request("eth_hashrate", &response); err != nil {
 		return 0, err
 	}
 
@@ -269,7 +104,7 @@ QUANTITY - 当前gas的价格整数。
 */
 func (rpc *EthRPC) EthGasPrice() (big.Int, error) {
 	var response string
-	if err := rpc.call("eth_gasPrice", &response); err != nil {
+	if err := rpc.request("eth_gasPrice", &response); err != nil {
 		return big.Int{}, err
 	}
 
@@ -286,7 +121,7 @@ Array of DATA, 20 Bytes - 该地址拥有的地址列表
 */
 func (rpc *EthRPC) EthAccounts() ([]string, error) {
 	accounts := []string{}
-	err := rpc.call("eth_accounts", &accounts)
+	err := rpc.request("eth_accounts", &accounts)
 	return accounts, err
 }
 
@@ -300,7 +135,7 @@ QUANTITY - 客户端所在当前块号的整数。
 */
 func (rpc *EthRPC) EthBlockNumber() (int, error) {
 	var response string
-	if err := rpc.call("eth_blockNumber", &response); err != nil {
+	if err := rpc.request("eth_blockNumber", &response); err != nil {
 		return 0, err
 	}
 	return ParseInt(response)
@@ -322,7 +157,7 @@ func (rpc *EthRPC) EthBlockNumber() (int, error) {
 */
 func (rpc *EthRPC) EthGetBalance(address, block string) (big.Int, error) {
 	var response string
-	if err := rpc.call("eth_getBalance", &response, address, block); err != nil {
+	if err := rpc.request("eth_getBalance", &response, address, block); err != nil {
 		return big.Int{}, err
 	}
 
@@ -332,7 +167,7 @@ func (rpc *EthRPC) EthGetBalance(address, block string) (big.Int, error) {
 //tx pool content 交易池查询
 func (rpc *EthRPC) EthTxContent() (content interface{}, err error) {
 	var response interface{}
-	if err := rpc.call("txpool_inspect", &response); err != nil {
+	if err := rpc.request("txpool_inspect", &response); err != nil {
 		return "查询失败", err
 	}
 
@@ -357,7 +192,7 @@ func (rpc *EthRPC) EthTxContent() (content interface{}, err error) {
 func (rpc *EthRPC) EthGetStorageAt(data string, position int, tag string) (string, error) {
 	var result string
 
-	err := rpc.call("eth_getStorageAt", &result, data, IntToHex(position), tag)
+	err := rpc.request("eth_getStorageAt", &result, data, IntToHex(position), tag)
 	return result, err
 }
 
@@ -377,7 +212,7 @@ QUANTITY - 返回从该地址发送的交易数量。
 func (rpc *EthRPC) EthGetTransactionCount(address, block string) (int, error) {
 	var response string
 
-	if err := rpc.call("eth_getTransactionCount", &response, address, block); err != nil {
+	if err := rpc.request("eth_getTransactionCount", &response, address, block); err != nil {
 		return 0, err
 	}
 
@@ -397,7 +232,7 @@ QUANTITY - 在该区块的交易数
 func (rpc *EthRPC) EthGetBlockTransactionCountByHash(hash string) (int, error) {
 	var response string
 
-	if err := rpc.call("eth_getBlockTransactionCountByHash", &response, hash); err != nil {
+	if err := rpc.request("eth_getBlockTransactionCountByHash", &response, hash); err != nil {
 		return 0, err
 	}
 
@@ -420,7 +255,7 @@ func (rpc *EthRPC) EthGetBlockTransactionCountByHash(hash string) (int, error) {
 func (rpc *EthRPC) EthGetBlockTransactionCountByNumber(number int) (int, error) {
 	var response string
 
-	if err := rpc.call("eth_getBlockTransactionCountByNumber", &response, IntToHex(number)); err != nil {
+	if err := rpc.request("eth_getBlockTransactionCountByNumber", &response, IntToHex(number)); err != nil {
 		return 0, err
 	}
 
@@ -441,7 +276,7 @@ func (rpc *EthRPC) EthGetBlockTransactionCountByNumber(number int) (int, error) 
 func (rpc *EthRPC) EthGetUncleCountByBlockHash(hash string) (int, error) {
 	var response string
 
-	if err := rpc.call("eth_getUncleCountByBlockHash", &response, hash); err != nil {
+	if err := rpc.request("eth_getUncleCountByBlockHash", &response, hash); err != nil {
 		return 0, err
 	}
 
@@ -496,7 +331,7 @@ func (rpc *EthRPC) EthGetUncleByBlockNumberAndIndex(number int, index int) (*Blo
 func (rpc *EthRPC) EthGetCode(address, block string) (string, error) {
 	var code string
 
-	err := rpc.call("eth_getCode", &code, address, block)
+	err := rpc.request("eth_getCode", &code, address, block)
 	return code, err
 }
 
@@ -514,7 +349,7 @@ DATA: 签名后的数据
 func (rpc *EthRPC) EthSign(address, data string) (string, error) {
 	var signature string
 
-	err := rpc.call("eth_sign", &signature, address, data)
+	err := rpc.request("eth_sign", &signature, address, data)
 	return signature, err
 }
 
@@ -529,7 +364,7 @@ func (rpc *EthRPC) EthSign(address, data string) (string, error) {
 */
 func (rpc *EthRPC) SignTransaction(t T) (SignPromise, error) {
 	var res SignPromise
-	err := rpc.call("eth_signTransaction", &res, t)
+	err := rpc.request("eth_signTransaction", &res, t)
 	return res, err
 }
 
@@ -562,14 +397,14 @@ func (rpc *EthRPC) SignTransaction(t T) (SignPromise, error) {
 */
 func (rpc *EthRPC) EthSendTransaction(transaction T) (string, error) {
 	var hash string
-	err := rpc.call("eth_sendTransaction", &hash, transaction)
+	err := rpc.request("eth_sendTransaction", &hash, transaction)
 	return hash, err
 }
 
 func (rpc *EthRPC) SendTransaction(transaction Transaction) (string, error) {
 	var hash string
 
-	err := rpc.call("eth_sendTransaction", &hash, transaction)
+	err := rpc.request("eth_sendTransaction", &hash, transaction)
 	return hash, err
 }
 
@@ -590,7 +425,7 @@ func (rpc *EthRPC) SendTransaction(transaction Transaction) (string, error) {
 func (rpc *EthRPC) EthSendRawTransaction(data string) (string, error) {
 	var hash string
 
-	err := rpc.call("eth_sendRawTransaction", &hash, data)
+	err := rpc.request("eth_sendRawTransaction", &hash, data)
 	return hash, err
 }
 
@@ -610,7 +445,7 @@ func (rpc *EthRPC) EthSendRawTransaction(data string) (string, error) {
 */
 func (rpc *EthRPC) EthSendSignedTransaction(data string) (string, error) {
 	var hash string
-	err := rpc.call("eth_sendSignedTransaction", &hash, data)
+	err := rpc.request("eth_sendSignedTransaction", &hash, data)
 	return hash, err
 }
 
@@ -633,7 +468,7 @@ EthCall executes a new message call immediately without creating a transaction o
 func (rpc *EthRPC) EthCall(transaction T, tag string) (string, error) {
 	var data string
 
-	err := rpc.call("eth_call", &data, transaction, tag)
+	err := rpc.request("eth_call", &data, transaction, tag)
 	return data, err
 }
 
@@ -648,7 +483,7 @@ EthEstimateGas makes a call or transaction, which won't be added to the blockcha
 func (rpc *EthRPC) EthEstimateGas(transaction T) (int, error) {
 	var response string
 
-	err := rpc.call("eth_estimateGas", &response, transaction)
+	err := rpc.request("eth_estimateGas", &response, transaction)
 	if err != nil {
 		return 0, err
 	}
@@ -704,7 +539,7 @@ func (rpc *EthRPC) EthGetTransactionByHash(hash string) (*Transaction, error) {
 }
 
 func (rpc *EthRPC) getBlock(method string, withTransactions bool, params ...interface{}) (*Block, error) {
-	result, err := rpc.RawCall(method, params...)
+	result, err := rpc.call(method, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -731,7 +566,7 @@ func (rpc *EthRPC) getBlock(method string, withTransactions bool, params ...inte
 func (rpc *EthRPC) getTransaction(method string, params ...interface{}) (*Transaction, error) {
 	transaction := new(Transaction)
 
-	err := rpc.call(method, transaction, params...)
+	err := rpc.request(method, transaction, params...)
 	return transaction, err
 }
 
@@ -793,7 +628,7 @@ func (rpc *EthRPC) EthGetTransactionByBlockNumberAndIndex(blockNumber, transacti
 func (rpc *EthRPC) EthGetTransactionReceipt(hash string) (*TransactionReceipt, error) {
 	transactionReceipt := new(TransactionReceipt)
 
-	err := rpc.call("eth_getTransactionReceipt", transactionReceipt, hash)
+	err := rpc.request("eth_getTransactionReceipt", transactionReceipt, hash)
 	if err != nil {
 		return nil, err
 	}
@@ -812,7 +647,7 @@ Array - 可以编译的数组列表。
 func (rpc *EthRPC) EthGetCompilers() ([]string, error) {
 	compilers := []string{}
 
-	err := rpc.call("eth_getCompilers", &compilers)
+	err := rpc.request("eth_getCompilers", &compilers)
 	return compilers, err
 }
 
@@ -829,7 +664,7 @@ func (rpc *EthRPC) EthGetCompilers() ([]string, error) {
 func (rpc *EthRPC) EthGetCompileSolidity(codes string) (string, error) {
 	var data string
 
-	err := rpc.call("eth_compileSolidity", codes, &data)
+	err := rpc.request("eth_compileSolidity", codes, &data)
 	return data, err
 }
 
@@ -846,7 +681,7 @@ func (rpc *EthRPC) EthGetCompileSolidity(codes string) (string, error) {
 func (rpc *EthRPC) EthGetCompileLLL(codes string) (string, error) {
 	var data string
 
-	err := rpc.call("eth_compileLLL", codes, &data)
+	err := rpc.request("eth_compileLLL", codes, &data)
 	return data, err
 }
 
@@ -863,7 +698,7 @@ func (rpc *EthRPC) EthGetCompileLLL(codes string) (string, error) {
 func (rpc *EthRPC) EthGetCompileSerpent(codes string) (string, error) {
 	var data string
 
-	err := rpc.call("eth_compileSerpent", codes, &data)
+	err := rpc.request("eth_compileSerpent", codes, &data)
 	return data, err
 }
 
@@ -888,7 +723,7 @@ func (rpc *EthRPC) EthGetCompileSerpent(codes string) (string, error) {
 */
 func (rpc *EthRPC) EthNewFilter(params FilterParams) (string, error) {
 	var filterID string
-	err := rpc.call("eth_newFilter", &filterID, params)
+	err := rpc.request("eth_newFilter", &filterID, params)
 	return filterID, err
 }
 
@@ -903,7 +738,7 @@ To check if the state has changed, call EthGetFilterChanges.
 */
 func (rpc *EthRPC) EthNewBlockFilter() (string, error) {
 	var filterID string
-	err := rpc.call("eth_newBlockFilter", &filterID)
+	err := rpc.request("eth_newBlockFilter", &filterID)
 	return filterID, err
 }
 
@@ -918,7 +753,7 @@ To check if the state has changed, call EthGetFilterChanges.
 */
 func (rpc *EthRPC) EthNewPendingTransactionFilter() (string, error) {
 	var filterID string
-	err := rpc.call("eth_newPendingTransactionFilter", &filterID)
+	err := rpc.request("eth_newPendingTransactionFilter", &filterID)
 	return filterID, err
 }
 
@@ -935,7 +770,7 @@ func (rpc *EthRPC) EthNewPendingTransactionFilter() (string, error) {
 */
 func (rpc *EthRPC) EthUninstallFilter(filterID string) (bool, error) {
 	var res bool
-	err := rpc.call("eth_uninstallFilter", &res, filterID)
+	err := rpc.request("eth_uninstallFilter", &res, filterID)
 	return res, err
 }
 
@@ -965,7 +800,7 @@ EthGetFilterChanges polling method for a filter, which returns an array of logs 
 */
 func (rpc *EthRPC) EthGetFilterChanges(filterID string) ([]Log, error) {
 	var logs = []Log{}
-	err := rpc.call("eth_getFilterChanges", &logs, filterID)
+	err := rpc.request("eth_getFilterChanges", &logs, filterID)
 	return logs, err
 }
 
@@ -982,7 +817,7 @@ func (rpc *EthRPC) EthGetFilterChanges(filterID string) ([]Log, error) {
 */
 func (rpc *EthRPC) EthGetFilterLogs(filterID string) ([]Log, error) {
 	var logs = []Log{}
-	err := rpc.call("eth_getFilterLogs", &logs, filterID)
+	err := rpc.request("eth_getFilterLogs", &logs, filterID)
 	return logs, err
 }
 
@@ -999,7 +834,7 @@ func (rpc *EthRPC) EthGetFilterLogs(filterID string) ([]Log, error) {
 */
 func (rpc *EthRPC) EthGetLogs(params FilterParams) ([]Log, error) {
 	var logs = []Log{}
-	err := rpc.call("eth_getLogs", &logs, params)
+	err := rpc.request("eth_getLogs", &logs, params)
 	return logs, err
 }
 

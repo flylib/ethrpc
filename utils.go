@@ -92,6 +92,6 @@ web3.toWei(number, unit)
 */
 func (rpc *EthRPC) ToWei(number int64, unit string) (string, error) {
 	var data string
-	err := rpc.call("web3_", &data, number, unit)
+	err := rpc.request("web3_", &data, number, unit)
 	return data, err
 }

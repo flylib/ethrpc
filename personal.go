@@ -4,7 +4,7 @@ package ethrpc
 // 返回创建的地址
 func (rpc *EthRPC) PersonalNewAccount(password string) (address string, err error) {
 	var response string
-	if err := rpc.call("personal_newAccount", &response, password); err != nil {
+	if err := rpc.request("personal_newAccount", &response, password); err != nil {
 		return "创建失败", err
 	}
 
@@ -20,7 +20,7 @@ func (rpc *EthRPC) PersonalUnLockAccount(address, password string, duration ...i
 		second = duration[0]
 	}
 	var lock bool
-	err := rpc.call("personal_unlockAccount", &lock, address, password, second)
+	err := rpc.request("personal_unlockAccount", &lock, address, password, second)
 	return lock, err
 }
 
@@ -32,7 +32,7 @@ func (rpc *EthRPC) PersonalUnLockAccount(address, password string, duration ...i
 func (rpc *EthRPC) PersonalSendTransaction(transaction T, password string) (string, error) {
 	var hex string
 
-	err := rpc.call("personal_sendTransaction", &hex, transaction, password)
+	err := rpc.request("personal_sendTransaction", &hex, transaction, password)
 
 	return hex, err
 }
@@ -42,6 +42,6 @@ func (rpc *EthRPC) PersonalSendTransaction(transaction T, password string) (stri
 func (rpc *EthRPC) PersonalListAccounts() ([]string, error) {
 	var list []string
 
-	err := rpc.call("personal_listAccounts", &list)
+	err := rpc.request("personal_listAccounts", &list)
 	return list, err
 }

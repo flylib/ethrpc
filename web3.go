@@ -12,7 +12,7 @@ String - 当前客户端版本号
 */
 func (rpc *EthRPC) Web3ClientVersion() (string, error) {
 	var clientVersion string
-	err := rpc.call("web3_clientVersion", &clientVersion)
+	err := rpc.request("web3_clientVersion", &clientVersion)
 	return clientVersion, err
 }
 
@@ -30,6 +30,6 @@ func (rpc *EthRPC) Web3ClientVersion() (string, error) {
 func (rpc *EthRPC) Web3Sha3(data []byte) (string, error) {
 	var hash string
 
-	err := rpc.call("web3_sha3", &hash, fmt.Sprintf("0x%x", data))
+	err := rpc.request("web3_sha3", &hash, fmt.Sprintf("0x%x", data))
 	return hash, err
 }
